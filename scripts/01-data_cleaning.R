@@ -1,8 +1,8 @@
 #### Preamble ####
-# Purpose: Clean the survey data downloaded from [...UPDATE ME!!!!!]
-# Author: Rohan Alexander [CHANGE THIS TO YOUR NAME!!!!]
-# Data: 3 January 2021
-# Contact: rohan.alexander@utoronto.ca [PROBABLY CHANGE THIS ALSO!!!!]
+# Purpose: Clean the survey data downloaded from open.toronto.ca
+# Author: Bennie Yu
+# Data: 3 Feburary 2021
+# Contact: bennie.yu@mail.utoronto.ca
 # License: MIT
 # Pre-requisites: 
 # - Need to have downloaded the ACS data and saved it to inputs/data
@@ -30,7 +30,9 @@ rm(raw_data)
          
 
 #### What's next? ####
-
+data_clean <- data %>% 
+  mutate(date_m=as.Date(paste("01-", `date(mmm-yy)`, sep = ""), format="%d-%b-%y")) %>% 
+  select(date_m,population_group, newly_identified,actively_homeless, ageunder16, `age16-24`, `age25-44`, `age45-64`, age65over, gender_male, gender_female, `gender_transgender,non-binary_or_two_spirit`)
 
 
          

@@ -1,0 +1,159 @@
+---
+title: "Problems with Homelessness and Shelters in Toronto"
+author: "Bennie Yu"
+date: "02/02/2022"
+output: pdf_document
+abstract: "Homelessness datasets are extremely important for the city governments to fund and provide services. This report will discuss the homeless trends in Toronto, and how are different groups affecting homelessness. By reseach, single male adults have the highest rate of being homeless for several reasons."
+bibliography : ref_list.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include=FALSE}
+library(kableExtra)
+library(tidyverse)
+library(opendatatoronto)
+library(dplyr)
+
+# get package
+package <- show_package("ac77f532-f18b-427c-905c-4ae87ce69c93")
+package
+
+# get all resources for this package
+resources <- list_package_resources("ac77f532-f18b-427c-905c-4ae87ce69c93")
+
+# identify datastore resources; by default, Toronto Open Data sets datastore resource format to CSV for non-geospatial and GeoJSON for geospatial resources
+datastore_resources <- filter(resources, tolower(format) %in% c('csv', 'geojson'))
+
+# load the first datastore resource as a sample
+data <- filter(datastore_resources, row_number()==1) %>% get_resource()
+data
+```
+
+# Introduction
+
+Homelessness has been one of the most serious problems in North America. In Toronto, out of 10000 people, 30 of them are homeless (Homefirst, 2018). As the global pandemic COVID 19 spreads around the world, many people have lost their jobs. Homelessness has became a more serious problem across Canada. As the homeless population is increased over years, it also increases the risk of crime victimization in high income countries (Nilsson, Nordentoft, Fazel, and Laursen, 2020). 
+
+Being a resident in downtown Toronro, is it very important to understand the problems of homelessness around me. In this report, I will use the open-acess dataset from Toronto's Shelter Support and Housing Administration to find out the relationship between different groups and homelessness. I will also discuss some of the biases and inaccuracy of how the data was collected. Moreover, I will discuss how the global pandemic COVID 19 is affecting the homelessness in Toronto. The dataset will be processed through R (R Core Team 2020) by using tidyverse (Wickham et al. 2019) and dplyr (Wickham et al. 2021) packages. Figures will be created by using ggplot2 (Wickham 2016) and kableExtra (Zhu 2020).
+# Data
+
+## Data Source
+
+The data set used in this paper was obtained from the Shelter Support and Housing Administration division's Shelter Management Information System (SMIS) database. The SMIS is a system in Toronto that can help shelter staffs to quickly find any available rooms of beds in the city. The datas are collected monthly starting the year of 2021. The Toronto shelter system flow dataset used in the paper was gathered from Open Data Toronto using the R package (Gelfand 2020). The dataset was last updated on January 2022.
+
+## Methodology and Data Collection
+
+The dataset includes information about people who are experiencing homeless in Toronto from January 2020 to December 2021. The data were collected through the SMIS in operating shelters when people are entering and existing the shelters, 24-hour respite sites, warming centers, or other services funded by the city of Toronto. 
+While this dataset contains information of people entering and existing the shelters, there might still be biases when collecting data. Since the population of the dataset is all people experiencing different levels of homeless in Toronto and the frame is the SMIS, it is unsure how accurately the sample are collected by the SMIS. The SMIS does not actively search for refugees or homeless people; it only records people who goes to the services, therefore, homeless people who did not go to any shelters or services are not included in this dataset. Also, due to the COVID 19 pandemic, temporary shelters were built in Toronto which might also increase the occupancy rate(Aguilar, 2022). However, poeple might be fear to get infected by COVID 19 so they chose not to gather in a shelter with other people. Many people have lost their jobs during the pandemic, this might lead to an increase in the occupancy rate; whereas the extreme weathers in Toronto destroying shelters might create staff shortage and decrease occupancy rate (Cohen, 2022). However, the dataset was not perfectly collected, it still provides considerable and important information about the shelters in Toronto during the pandemic.
+
+
+## Data Charteristics
+
+```{r, include=FALSE}
+# Convert date(mmm-yy) into proper date format and select specific variables.
+data_clean <- data %>% 
+  mutate(date_m=as.Date(paste("01-", `date(mmm-yy)`, sep = ""), format="%d-%b-%y")) %>% 
+  select(date_m,population_group, newly_identified,actively_homeless, ageunder16, `age16-24`, `age25-44`, `age45-64`, age65over, gender_male, gender_female, `gender_transgender,non-binary_or_two_spirit`)
+```
+
+The Toronto Shelter System dataset provides data of homeless people in Toronto from the beginning of 2020 to the end of 2021. There are 180 observations in total containing 18 variables. By cleaning the data using mutate and select in tidyverse (Wickham, 2019), 11 variables were selected, which includes: date, population group (either refugee, family, or others), newly identified homeless people, count of actively homeless people, age under 16, age 16-24, age 25-44, age 45-64, age 65 and over, gender male, gender female, and other gender. People are considered actively homeless if they have used either a shelter or other services provided by the city of Toronto in the past 3 months. The count of actively homeless were aggregated by dates, population groups, age groups, and different genders. Here is a sample of the dataset.
+
+```{r, echo=FALSE}
+# create a table of the dataset
+kable(head(data_clean), caption=NULL)
+
+```
+
+
+### Newly Identified Homeless Count and Date
+
+In the barplot of date and newly identified homeless people, we can see that shelters are most occupied in winters and least occupied during summers (Figure 1). It is very convincing since Toronto is in a semi-continental climate where we are having very long and cold winters and hot summers (Owuor 2019). Homeless people need to go to a shelter or warming center, otherwise they will be freezing in the winter storms. However, we can see that comparing to the 2020 winter and the 2022 winter, the winter in 2021 is having very low counts of newly identified homeless people. The reason for this might be the low cases of COVID 19 and the calm climates in winter 2021. But overall, we dont see a increasing trend of newly identified homelessness during the past 2 years in Toronto.
+```{r abc, fig.cap="Newly Identified vs. Date", fig.height=3, echo=FALSE}
+# Create a barplot of newly identified homeless people and date.
+data_clean %>% ggplot(aes(x=date_m, y=newly_identified)) + geom_bar(stat = 'identity') + theme_classic() + labs(x="Date", y="Newly Identified Homeless People", title="Figure 1: Newly Identified vs. Date")
+```
+
+### Actively Homeless Count and Population Groups
+Having all population aside, the majority population that is actively homeless are non-refugees, and indigenous are taking the least proportion (Figure 2). It is also noticeable that most of the homeless population are single adults. Single adults are more likely to be homeless than those who have families. Unlike adults with families, single adults are being less responsible to the people around them; they have no families to be considered. Chronic homelessness also makes a big portion of all homeless population. The city of Toronto is putting a large amount of efforts into ending chronic homelessness in the city. 90% of the homelessness in Toronto are Toronto residents; the city government invested $663.2 millions in 2021 (Toronto.ca, 2021). Notice that when adding up populations other than all population,  it might seem to exceed the count of all population; this is reasonable because one population may contain part of another population. For example, part of non-refugees can also considered as single adults. 
+```{r, echo=FALSE, fig.height=3, fig.cap='Population Group and Homelessness'}
+# Create a barplot of different populations and actively homeless people.
+data_clean %>% ggplot(aes(x=population_group, y=actively_homeless)) + geom_bar(stat = 'identity') + theme_classic() + labs(x="Population Group", y= "Actively Homeless Counts", title="Figure 2: Actively Homelessness vs. Population Group")
+```
+
+### Gender
+|Male|Female|Transgender, non-binary, or two spirit|Single Adult Male|Single Adult Female|Single Adult Transgender, non-binary, or two spirit|
+|--------|--------|--------------------------------------|-----------------|-------------------|----------------------------------------------------|
+|440582|247127|11049|96603|40360|2134|
+```{r, include=FALSE}
+# Summing up all homeless people by genders.
+sum(data_clean$gender_male)
+sum(data_clean$gender_female)
+sum(data_clean$`gender_transgender,non-binary_or_two_spirit`)
+data_f <- data_clean %>% filter(population_group == "Single Adult")
+sum(data_f$gender_male)
+sum(data_f$gender_female)
+sum(data_f$`gender_transgender,non-binary_or_two_spirit`)
+```
+Summing up all genders recorded by the SMIS we find that majority of the homeless population are male and female, whereas homeless males are approximately doubling the number of homeless females. Single homeless males are taking about 1/3 of the over all male proportion. The data shows that single men are more likely to be homeless. There are many reasons for this. By research, many of the homeless males are veterans, some of them faces post-traumatic stress disorders; and they are less likely to seek for mental treatments than other genders (KVII 2020). It creates problem for them to find new jobs. Also, men are having higher crime rates than other genders. Because of criminal justice, a man coming fresh out of prison is more likely to be homeless (KVII 2020). 
+
+### Age
+
+```{r, include=FALSE}
+# Summing up all homeless people by age groups
+sum(data_clean$ageunder16)
+sum(data_clean$`age16-24`)
+sum(data_clean$`age25-44`)
+sum(data_clean$`age45-64`)
+sum(data_clean$age65over)
+```
+
+```{r, echo=FALSE}
+# Creating a pie chart of the proportion of different age groups.
+df <- data.frame(
+  Age_group = c("<16", "16-24", "25-44", "45-64", ">65"),
+  value = c(68850, 80376, 275992, 226022, 47200)
+  )
+
+bp<- ggplot(df, aes(x="", y=value, fill=Age_group))+
+geom_bar(width = 1, stat = "identity")
+
+pie <- bp + coord_polar("y", start=0) + geom_text(aes(label = paste0(round(value*100/sum(value)), "%")), position = position_stack(vjust = 0.5))
+pie = pie + labs(x = NULL, y = NULL, fill = NULL, title = "Figure 3: Proportion of Honmeless Age Groups")
+pie
+```
+
+|Under 16|16-24|25-44|45-64|Over 65|
+|--------|-----|-----|-----|-------|
+|68850|80376|275991|226022|47200|
+
+Summing up all the age groups of homeless people in Toronto, we can see that the majority of homelessness happens in the age between 25 and 64; in other words, the adult group. They contains 71.8% of the overall homeless in Toronto. People in the age between 25 and 64 are more likely to get addicted to drugs and alcohols which is one of the main reason for homelessness (Fredvictor, 2021). Other reasons for homelessness may include family broke up and lost of jobs. By research, 35% of all homelessness are caused by loss of jobs, and they are more likely to happen on working aged adults than teenagers and seniors (Woolley, 2015). Accidents in life such as divorcing and car accidents are also reasons for adults to be lazy to find a job. These types of accidents may contribute for sudden loss of income or generating extra payments (Woolley, 2015).
+
+\newpage
+
+# Reference
+
+About Toronto homelessness. Homes First. (2021, February 9). Retrieved February 3, 2022, from https://homesfirst.on.ca/about-toronto-homelessness/ 
+
+Aguilar, B. (2022, January 13). Toronto to open two emergency shelters, distribute more than 310k N95 masks to homeless. CP24. Retrieved February 3, 2022, from https://www.cp24.com/news/toronto-to-open-two-emergency-shelters-distribute-more-than-310k-n95-masks-to-homeless-1.5739215 
+
+City of Toronto. (2021, November 15). Shelter System Flow Data. City of Toronto. Retrieved February 3, 2022, from https://www.toronto.ca/city-government/data-research-maps/research-reports/housing-and-homelessness-research-and-reports/shelter-system-flow-data/ 
+
+Cohen, B. (2022, January 14). Toronto's shelter system close to collapse due to cold weather, COVID-19, staff shortage. thestar.com. Retrieved February 3, 2022, from https://www.thestar.com/news/gta/2022/01/13/torontos-shelter-system-close-to-collapse-due-to-cold-weather-covid-19-staff-shortage.html 
+
+Everyday myths about the homeless – debunked. Fred Victor. (2022, January 4). Retrieved February 3, 2022, from https://www.fredvictor.org/2021/09/30/everyday-myths-about-the-homeless-debunked/ 
+
+Kvii. (2020, July 27). 3 reasons why men are overrepresented in the homeless population. KVII. Retrieved February 3, 2022, from https://abc7amarillo.com/features/invisible/3-reasons-why-men-are-overrepresented-in-the-homeless-population 
+
+Nilsson, S. F., Nordentoft, M., Fazel, S., &amp; Laursen, T. M. (2020, June). Homelessness and police-recorded crime victimisation: a nationwide, register-based cohort study. Define_me. Retrieved February 3, 2022, from https://www.thelancet.com/journals/lanpub/article/PIIS2468-2667(20)30075-X/fulltext 
+
+Rech, N. (2019, April 29). Homelessness in Canada. The Canadian Encyclopedia. Retrieved February 3, 2022, from https://www.thecanadianencyclopedia.ca/en/article/homelessness-in-canada 
+
+Woolley, E. (2015, February 27). What are the statistics on homelessness due to divorce? What are the statistics on homelessness due to divorce? | The Homeless Hub. Retrieved February 3, 2022, from https://www.homelesshub.ca/blog/what-are-statistics-homelessness-due-divorce 
+
+@aaa
+@bbb
+@ccc
+@ddd
+@eee

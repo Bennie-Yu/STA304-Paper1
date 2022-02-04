@@ -6,6 +6,7 @@ output: pdf_document
 abstract: "Homelessness datasets are extremely important for the city governments to fund and provide services. This report will discuss the homeless trends in Toronto, and how are different groups affecting homelessness. By reseach, single male adults have the highest rate of being homeless for several reasons."
 bibliography : ref_list.bib
 ---
+.^[https://github.com/Bennie-Yu/STA304-Paper1]
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
